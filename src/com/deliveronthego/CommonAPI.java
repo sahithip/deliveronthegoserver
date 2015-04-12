@@ -1,8 +1,7 @@
 package com.deliveronthego;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -12,17 +11,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.deliveronthego.DbConnection;
-
-import org.apache.catalina.User;
-import org.codehaus.jackson.Base64Variant;
-import org.codehaus.jackson.JsonLocation;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.ObjectCodec;
-import org.codehaus.jackson.JsonParser.NumberType;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -82,6 +70,47 @@ public class CommonAPI {
 
         return Response.status(404).entity("fail").build();
 	  }
+	
+	@POST
+	@Path("/location")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response getSingUp(String location)
+	{
+		try{
+			JSONObject locationJsonObj = new JSONObject(location);
+			JSONObject transitionJsonObj = locationJsonObj.getJSONObject("transition");
+			double transitionLatitude = transitionJsonObj.getDouble("latitude");
+			double transitsionLongitude = transitionJsonObj.getDouble("longitude");
+			JSONObject StopJsonObj = locationJsonObj.getJSONObject("stop");
+			double stoplatitude = StopJsonObj.getDouble("latitude");
+			double stopLongitude = StopJsonObj.getDouble("longitude");
+			
+			System.out.println(transitionLatitude);
+			System.out.println(transitsionLongitude);
+			System.out.println(stoplatitude);
+			System.out.println(stopLongitude);
+			
+			Date date = new Date();
+			Calendar cal = Calendar.getInstance();
+		    cal.setTime(date);
+		    int year = cal.get(Calendar.YEAR);
+		    int month = cal.get(Calendar.MONTH)+ 1;
+		    int day = cal.get(Calendar.DAY_OF_MONTH);
+		    String dateStr = month + "/" + day + "/" + year;
+		    System.out.println(dateStr);
+				   
+			boolean var = new DbConnection().location(dateStr,transitionLatitude,transitsionLongitude,stoplatitude,stopLongitude,locationJsonObj.getInt("driverID"));
+			if(var)
+				return Response.status(200).entity("Success").build();
+			else
+				return Response.status(404).entity("fail").build();
+		}
+		catch(JSONException e)
+		{
+			e.printStackTrace();
+		}
+		return Response.status(200).entity("success").build();
+	}
 
 	
 }
