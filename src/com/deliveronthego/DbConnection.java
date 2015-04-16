@@ -20,41 +20,57 @@ public class DbConnection {
 		 return mongoclient;
 	}
 	
-	public boolean signup(String username,String password,String userType){
+	public boolean driverSignup(String firstName, String LastName, String driverLicense, String emailId, String password, int phoneNumber){
 		mongoclient = getConnection();
 		DB db = mongoclient.getDB("deliveronthego");
-		DBCollection login =  db.getCollection("login");
-		BasicDBObject logObj = new BasicDBObject("username",username)
-		.append("password",password).append("usertype", userType);
-		DBCursor userObj = login.find(logObj);
-		login.insert(logObj);
+		DBCollection driverSignUpInfo =  db.getCollection("driverSignUpInfo");
+		if(emailId.contains("@")&&(password.length()<=8)&& String.valueOf(phoneNumber).length()==10)
+		{
+		BasicDBObject driverSignUpInfoObj = new BasicDBObject("firstName",firstName)
+		.append("LastName", LastName)
+		.append(driverLicense, driverLicense)
+		.append(emailId, emailId)
+		.append("password",password).append("phoneNumber", phoneNumber);
+		driverSignUpInfo.insert(driverSignUpInfoObj);
 		return true;
+		}
+		//DBCursor userObj = login.find(logObj);
+		else
+		{
+			return false;
+		}
 	}
-	public boolean deliver(String emailId, String pickup,String dropOff,String dimensions){
+	public boolean deliver(String emailId, String pickup,String dropOff,int length, int breadth, int width){
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection delivery =  db.getCollection("delivery");
 		BasicDBObject logObj = new BasicDBObject("emailId",emailId)
-		.append("pickup",pickup).append("dropoff", dropOff).append("dimensions", dimensions);
+		.append("pickup",pickup).append("dropOff", dropOff).append("dimensions", new BasicDBObject("length", length).append("breadth", breadth).append("width", width));
 		WriteResult userObj = delivery.insert(logObj);
 
 		return true;
 	}
-	public boolean login(String username,String password){
+	public boolean login(String email,String password){
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection login =  db.getCollection("login");
-		BasicDBObject logObj = new BasicDBObject("username",username);
-		DBCursor userObj = login.find(logObj);
-		DBObject pwd = userObj.curr();//getString("Password");
-		String paswrd = pwd.get("Password").toString();
-		if(paswrd.equals(password)){
-		return true;
-		}else{
-			return false;
+		if(email.contains("@"))
+		{
+			BasicDBObject logObj = new BasicDBObject("username",email);
+			DBCursor userObj = login.find(logObj);
+			DBObject pwd = userObj.curr();//getString("Password");
+			String paswrd = pwd.get("Password").toString();
+			if(paswrd.equals(password)){
+			return true;
+			}else{
+				return false;
+			}
 		}
+		else{
+			return false;
+		}		
 	}
 		
 	public boolean location(String date, double transitionLatitude, double transitionLongitude, double stoplatitude, double stopLongitude, int driverId)
