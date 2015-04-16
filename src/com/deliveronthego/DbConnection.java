@@ -1,7 +1,5 @@
 package com.deliveronthego;
 
-import java.util.Date;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -81,12 +79,12 @@ public class DbConnection {
 			if(dateStr.equals(date))
 			{
 				location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("transition.latitude", transitionLatitude).append("transition.longitude", transitionLongitude)));
-				if((stoplatitude!=0.0) && (stopLongitude!=0.0))
+				BasicDBObject previousStopDB = (BasicDBObject) locDB.get("stop");
+				Double previousStopLatitude = previousStopDB.getDouble("latitude");
+				Double previousStopLongitude = previousStopDB.getDouble("longitude");
+				if((previousStopLatitude==0.0) && (previousStopLongitude==0.0))
 				{
-					BasicDBObject stopDB = (BasicDBObject) locDB.get("stop");
-					stopDB.put("latitude", stoplatitude);
-					stopDB.put("longitude", stopLongitude);
-					location.update(new BasicDBObject("date", date), new BasicDBObject("$push", stopDB));
+					location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("stop.latitude", stoplatitude).append("stop.longitude", stopLongitude)));
 				}
 			}
 			updateFlag = true;
