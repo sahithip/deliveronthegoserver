@@ -24,58 +24,79 @@ public class CommonAPI {
 	  }
 	
 	@POST
-	@Path("/signup")
+	@Path("/driversignup")
 	@Consumes(MediaType.APPLICATION_JSON)
-
-	public Response doSignup(String user) {
-		//String username = user.getUsername();
-        //String password = user.getPassword();
-      //  System.out.println("username--"+username);
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response doSignup(String driverSignUpInfo) {
+		
+		String message;
 		try {
-			JSONObject json = new JSONObject(user);
-        	boolean var =new DbConnection().signup(json.getString("emailid"),json.getString("password"),json.getString("usertype"));
+			
+			JSONObject statusMessage = new JSONObject();
+			JSONObject driverSignUpInfoJsonObj = new JSONObject(driverSignUpInfo);
+        	boolean var =new DbConnection().driverSignup(driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("driverLicense")
+        			,driverSignUpInfoJsonObj.getString("emailId"),driverSignUpInfoJsonObj.getString("password"),driverSignUpInfoJsonObj.getInt("phoneNumber"));
         	if(var)
-                return Response.status(200).entity(json.getString("usertype")).build();
+        	{
+        		message = "Driver Sign up Information inserted in the database successfully";
+        		statusMessage.put("message", message);
+                return Response.status(200).entity(statusMessage).build();
+        	}
         	else
-                return Response.status(404).entity("fail").build();
-			//System.out.println(json);
+        	{
+        		message = "Driver Sign up Information insertion failed";
+        		statusMessage.put("message", message);
+                return Response.status(404).entity(statusMessage).build();
+        	}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			message = "Driver Sign up Information insertion failed";
+	        return Response.status(404).entity(message).build();
 		}
-
-        return Response.status(404).entity("fail").build();
 	  }
 	
 	@POST
 	@Path("/deliver")
 	@Consumes(MediaType.APPLICATION_JSON)
-
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response doDeliveryDetails(String deliver) {
-		//String username = user.getUsername();
-        //String password = user.getPassword();
-      //  System.out.println("username--"+username);
+		String message;
 		try {
-			JSONObject json = new JSONObject(deliver);
-        	boolean var =new DbConnection().deliver(json.getString("emailid"),json.getString("pickup"),json.getString("dropOff"),json.getString("dimensions"));
+			JSONObject deliverJson = new JSONObject(deliver);
+			JSONObject dimensionJson = deliverJson.getJSONObject("dimensions");
+        	boolean var =new DbConnection().deliver(deliverJson.getString("emailid"),deliverJson.getString("pickup"),deliverJson.getString("dropOff"),dimensionJson.getInt("length"),dimensionJson.getInt("breadth"),dimensionJson.getInt("width"));
+        	
         	if(var)
-                return Response.status(200).entity("success").build();
+        	{
+        		message = "Delivery Details Inserted successfully";
+        		JSONObject statusMessage = new JSONObject();
+        		statusMessage.put("message", message);
+                return Response.status(200).entity(statusMessage).build();
+        	}
         	else
-                return Response.status(404).entity("fail").build();
-			//System.out.println(json);
+        	{
+        		message = "Delivery Details Insertion Failed";
+        		JSONObject statusMessage = new JSONObject();
+        		statusMessage.put("message", message);
+                return Response.status(404).entity(statusMessage).build();
+        	}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-        return Response.status(404).entity("fail").build();
+		message = "Delivery Details Insertion Failed";
+        return Response.status(404).entity(message).build();
 	  }
 	
 	@POST
 	@Path("/location")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response getSingUp(String location)
 	{
+		String message;
 		try{
 			JSONObject locationJsonObj = new JSONObject(location);
 			JSONObject transitionJsonObj = locationJsonObj.getJSONObject("transition");
@@ -98,18 +119,28 @@ public class CommonAPI {
 		    int day = cal.get(Calendar.DAY_OF_MONTH);
 		    String dateStr = month + "/" + day + "/" + year;
 		    System.out.println(dateStr);
-				   
+		    JSONObject statusMessage = new JSONObject();	   
 			boolean var = new DbConnection().location(dateStr,transitionLatitude,transitsionLongitude,stoplatitude,stopLongitude,locationJsonObj.getInt("driverID"));
 			if(var)
-				return Response.status(200).entity("Success").build();
+			{
+				message = "Location Details Inserted successfully";       		
+        		statusMessage.put("message", message);
+				return Response.status(200).entity(statusMessage).build();
+			}
 			else
-				return Response.status(404).entity("fail").build();
+			{
+				message = "Location Details Insertion Failed";
+        		statusMessage.put("message", message);
+				return Response.status(404).entity(statusMessage).build();
+			}
 		}
 		catch(JSONException e)
 		{
 			e.printStackTrace();
+			message = "Location Details Inserted successfully";
+			return Response.status(404).entity(message).build();
 		}
-		return Response.status(200).entity("success").build();
+		
 	}
 
 	
