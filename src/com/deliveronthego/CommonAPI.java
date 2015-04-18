@@ -14,6 +14,8 @@ import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import com.deliveronthego.algorithm.GraphTraversal;
+
 @Path("/home")
 public class CommonAPI {
 	@GET
@@ -191,6 +193,32 @@ public class CommonAPI {
 		}
 		
 	}
+	
+	@POST
+    @Path("/findDriver")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response findDriver(String userDetails) throws JSONException {
+		String driver;
+		try{
+		JSONObject json = new JSONObject(userDetails);
+		GraphTraversal g=new GraphTraversal();
+		//driver= g.findDriver(json.getString("emailid"));
+		System.out.println("user id==="+json.getString("emailid"));
+		driver= g.findDriver(json.getString("emailid"),json.getDouble("pickupLatitude"),json.getDouble("pickupLongitude"),json.getDouble("dropOffLatitude"),json.getDouble("dropOffLongitude"));
+		JSONObject response=new JSONObject(driver);
+		System.out.println("response value=="+response.toString());
+      //	boolean var =new DbConnection().deliver(json.getString("emailid"),json.getString("pickup"),json.getString("dropOff"),json.getString("dimensions"));
+		if(driver != null)
+		    return Response.status(200).entity(response.toString()).build();			
+		else
+		    return Response.status(404).entity("fail").build();
+		}
+		catch(JSONException e)
+		{
+			e.printStackTrace();
+		}
+		return Response.status(404).entity("fail").build();
+	  }
 
 	
 }
