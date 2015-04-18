@@ -66,14 +66,21 @@ public class DbConnection {
 			return false;
 		}
 	}
-	public boolean deliver(String emailId, String pickup,String dropOff,int length, int breadth, int width){
+	public boolean deliver(String emailId, Double pickupLatitude,Double pickupLongitude, Double dropOffLatitude,Double dropOffLongitude,
+			int length, int breadth, int width){
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection delivery =  db.getCollection("delivery");
 		BasicDBObject logObj = new BasicDBObject("emailId",emailId)
-		.append("pickup",pickup).append("dropOff", dropOff).append("dimensions", new BasicDBObject("length", length).append("breadth", breadth).append("width", width));
-		WriteResult userObj = delivery.insert(logObj);
+		.append("pickupLatitude",pickupLatitude)
+		.append("pickupLongitude", pickupLongitude)
+		.append("dropOffLatitude", dropOffLatitude)
+		.append("dropOffLongitude", dropOffLongitude)
+		.append("length",length)
+		.append("breadth", breadth).append("width", width);
+		
+		delivery.insert(logObj);
 
 		return true;
 	}
@@ -141,14 +148,15 @@ public class DbConnection {
 			String dateStr = locDB.get("Date").toString();
 			if(dateStr.equals(date))
 			{
-				location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("transition.latitude", transitionLatitude).append("transition.longitude", transitionLongitude)));
-				BasicDBObject previousStopDB = (BasicDBObject) locDB.get("stop");
-				Double previousStopLatitude = previousStopDB.getDouble("latitude");
-				Double previousStopLongitude = previousStopDB.getDouble("longitude");
-				if((previousStopLatitude==0.0) && (previousStopLongitude==0.0))
+				location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("transitionLatitude", transitionLatitude).append("transitionLongitude", transitionLongitude)));
+				Double previousStopLatitude = (Double) locDB.get("stopLatitude");
+				Double previousStopLongitude = (Double) locDB.get("stopLongitude");
+				System.out.println("previousStopLatitude: " + previousStopLatitude);
+				System.out.println("previousStopLongitude: " + previousStopLongitude);
+				/*if((previousStopLatitude==0.0) && (previousStopLongitude==0.0))
 				{
-					location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("stop.latitude", stoplatitude).append("stop.longitude", stopLongitude)));
-				}
+					location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("stopLatitude", stoplatitude).append("stopLongitude", stopLongitude)));
+				}*/
 			}
 			updateFlag = true;
 		}
@@ -156,8 +164,8 @@ public class DbConnection {
 		if(!updateFlag)
 		{
 			BasicDBObject locationObj = new BasicDBObject ("Date", date.toString())
-			.append("transition", new BasicDBObject("latitude",transitionLatitude).append("longitude", transitionLongitude) )
-			.append("stop", new BasicDBObject("latitude",stoplatitude).append("longitude", stopLongitude))
+			.append("transitionLatitude", transitionLatitude).append("transitionLongitude", transitionLongitude)
+			.append("stopLatitude", stoplatitude).append("stopLongitude", stopLongitude)
 			.append("driverID", driverId);		
 			location.insert(locationObj);
 		}

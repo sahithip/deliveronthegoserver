@@ -121,9 +121,11 @@ public class CommonAPI {
 	public Response doDeliveryDetails(String deliver) {
 		String message;
 		try {
-			JSONObject deliverJson = new JSONObject(deliver);
-			JSONObject dimensionJson = deliverJson.getJSONObject("dimensions");
-        	boolean var =new DbConnection().deliver(deliverJson.getString("emailid"),deliverJson.getString("pickup"),deliverJson.getString("dropOff"),dimensionJson.getInt("length"),dimensionJson.getInt("breadth"),dimensionJson.getInt("width"));
+			JSONObject deliverJson = new JSONObject(deliver);			
+        	boolean var =new DbConnection().deliver(deliverJson.getString("emailId"),
+        			deliverJson.getDouble("pickupLatitude"),deliverJson.getDouble("pickupLongitude"),
+        			deliverJson.getDouble("dropOffLatitude"),deliverJson.getDouble("dropOffLongitude"),
+        			deliverJson.getInt("length"),deliverJson.getInt("breadth"),deliverJson.getInt("width"));
         	
         	if(var)
         	{
@@ -156,19 +158,7 @@ public class CommonAPI {
 	{
 		String message;
 		try{
-			JSONObject locationJsonObj = new JSONObject(location);
-			JSONObject transitionJsonObj = locationJsonObj.getJSONObject("transition");
-			double transitionLatitude = transitionJsonObj.getDouble("latitude");
-			double transitsionLongitude = transitionJsonObj.getDouble("longitude");
-			JSONObject StopJsonObj = locationJsonObj.getJSONObject("stop");
-			double stoplatitude = StopJsonObj.getDouble("latitude");
-			double stopLongitude = StopJsonObj.getDouble("longitude");
-			
-			System.out.println(transitionLatitude);
-			System.out.println(transitsionLongitude);
-			System.out.println(stoplatitude);
-			System.out.println(stopLongitude);
-			
+			JSONObject locationJsonObj = new JSONObject(location);			
 			Date date = new Date();
 			Calendar cal = Calendar.getInstance();
 		    cal.setTime(date);
@@ -178,7 +168,8 @@ public class CommonAPI {
 		    String dateStr = month + "/" + day + "/" + year;
 		    System.out.println(dateStr);
 		    JSONObject statusMessage = new JSONObject();	   
-			boolean var = new DbConnection().location(dateStr,transitionLatitude,transitsionLongitude,stoplatitude,stopLongitude,locationJsonObj.getString("driverID"));
+			boolean var = new DbConnection().location(dateStr,locationJsonObj.getDouble("transitionLatitude"),locationJsonObj.getDouble("transitionLongitude"),
+					locationJsonObj.getDouble("stopLatitude"),locationJsonObj.getDouble("stopLongitude"),locationJsonObj.getString("driverID"));
 			if(var)
 			{
 				message = "Location Details Inserted successfully";       		
@@ -195,7 +186,7 @@ public class CommonAPI {
 		catch(JSONException e)
 		{
 			e.printStackTrace();
-			message = "Location Details Inserted successfully";
+			message = "Location Details Insertion Failed";
 			return Response.status(404).entity(message).build();
 		}
 		
