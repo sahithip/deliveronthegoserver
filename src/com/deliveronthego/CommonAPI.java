@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-@Path("/hello")
+@Path("/home")
 public class CommonAPI {
 	@GET
 	@Path("/test")
@@ -24,10 +24,68 @@ public class CommonAPI {
 	  }
 	
 	@POST
+	@Path("/login")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response logIn(String logInInfo) throws JSONException
+	{
+		String message = null;		
+		JSONObject logInInfoJsonObj = new JSONObject(logInInfo);
+		String emailId = logInInfoJsonObj.getString("emailId");
+		String password = logInInfoJsonObj.getString("password");
+		System.out.println("emailId: "+emailId);
+		System.out.println("password: "+password);
+		boolean var =  new DbConnection().login(emailId,password);
+		
+		JSONObject statusMessage = new JSONObject();
+		
+		if(var)
+		{
+			message = "Log In success!!";
+    		statusMessage.put("message", message);
+            return Response.status(200).entity(statusMessage).build();
+		}
+		else
+		{
+			message = "Log In Failed!!!";
+    		statusMessage.put("message", message);
+            return Response.status(200).entity(statusMessage).build();
+		}		
+	}
+	
+	
+	@POST
+	@Path("/customersignup")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response customerSignup(String customerSignUpInfo) throws JSONException
+	{
+		String message;
+		JSONObject statusMessage = new JSONObject();
+		JSONObject customerSignupInfoJsonObj = new JSONObject (customerSignUpInfo);
+		boolean var = new DbConnection().customerSignup(customerSignupInfoJsonObj.getString("firstName"), customerSignupInfoJsonObj.getString("lastName"),
+				customerSignupInfoJsonObj.getString("emailId"),
+				customerSignupInfoJsonObj.getString("password"), customerSignupInfoJsonObj.getInt("phoneNumber"));
+		
+		if(var)
+		{
+			message = "Customer Sign up Information inserted in the database successfully";
+    		statusMessage.put("message", message);
+            return Response.status(200).entity(statusMessage).build();
+		}
+		else
+		{
+			message = "Customer Sign up Information Insertion failed!";
+    		statusMessage.put("message", message);
+            return Response.status(200).entity(statusMessage).build();
+		}		
+	}
+	
+	@POST
 	@Path("/driversignup")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response doSignup(String driverSignUpInfo) {
+	public Response driverSignup(String driverSignUpInfo) {
 		
 		String message;
 		try {
@@ -120,7 +178,7 @@ public class CommonAPI {
 		    String dateStr = month + "/" + day + "/" + year;
 		    System.out.println(dateStr);
 		    JSONObject statusMessage = new JSONObject();	   
-			boolean var = new DbConnection().location(dateStr,transitionLatitude,transitsionLongitude,stoplatitude,stopLongitude,locationJsonObj.getInt("driverID"));
+			boolean var = new DbConnection().location(dateStr,transitionLatitude,transitsionLongitude,stoplatitude,stopLongitude,locationJsonObj.getString("driverID"));
 			if(var)
 			{
 				message = "Location Details Inserted successfully";       		

@@ -20,17 +20,43 @@ public class DbConnection {
 		 return mongoclient;
 	}
 	
-	public boolean driverSignup(String firstName, String LastName, String driverLicense, String emailId, String password, int phoneNumber){
+	public boolean customerSignup(String firstName, String lastName, String emailId, String password, int phoneNumber)
+	{
+		mongoclient = getConnection();
+		@SuppressWarnings("deprecation")
+		DB database = mongoclient.getDB("deliveronthego");
+		DBCollection customerSignUpInfo = database.getCollection("login");
+		if(emailId.contains("@")&&(password.length()<=8)&&(String.valueOf(phoneNumber).length()==10))
+		{
+			BasicDBObject customerSignUpInfoObj = new BasicDBObject("firstName",firstName)
+			.append("lastName", lastName)
+			.append("emailId", emailId)
+			.append("password", password)
+			.append("phoneNumber", phoneNumber)
+			.append("userType", "C");
+			
+			
+			customerSignUpInfo.insert(customerSignUpInfoObj);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	public boolean driverSignup(String firstName, String lastName, String driverLicense, String emailId, String password, int phoneNumber){
 		mongoclient = getConnection();
 		DB db = mongoclient.getDB("deliveronthego");
-		DBCollection driverSignUpInfo =  db.getCollection("driverSignUpInfo");
+		DBCollection driverSignUpInfo =  db.getCollection("login");
 		if(emailId.contains("@")&&(password.length()<=8)&& String.valueOf(phoneNumber).length()==10)
 		{
 		BasicDBObject driverSignUpInfoObj = new BasicDBObject("firstName",firstName)
-		.append("LastName", LastName)
-		.append(driverLicense, driverLicense)
-		.append(emailId, emailId)
-		.append("password",password).append("phoneNumber", phoneNumber);
+		.append("lastName", lastName)
+		.append("driverLicense", driverLicense)
+		.append("emailId", emailId)
+		.append("password",password).append("phoneNumber", phoneNumber)
+		.append("userType", "D");
 		driverSignUpInfo.insert(driverSignUpInfoObj);
 		return true;
 		}
@@ -51,29 +77,50 @@ public class DbConnection {
 
 		return true;
 	}
-	public boolean login(String email,String password){
+	public boolean login(String emailId,String password){
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection login =  db.getCollection("login");
-		if(email.contains("@"))
+		if(emailId.contains("@"))
 		{
-			BasicDBObject logObj = new BasicDBObject("username",email);
-			DBCursor userObj = login.find(logObj);
-			DBObject pwd = userObj.curr();//getString("Password");
-			String paswrd = pwd.get("Password").toString();
-			if(paswrd.equals(password)){
-			return true;
-			}else{
-				return false;
+			BasicDBObject logInObj = new BasicDBObject();
+			logInObj.put("emailId", emailId);
+			DBCursor logInCursor = login.find(logInObj);
+			
+			while(logInCursor.hasNext())
+			{
+				logInCursor.next();
+				DBObject userDetailObj = logInCursor.curr();
+				if(userDetailObj!=null)
+				{
+					String logInPassword = userDetailObj.get("password").toString();
+					System.out.println(logInPassword);
+					if((logInPassword!=null)&&(logInPassword.equalsIgnoreCase(password)))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+				
 			}
+			
 		}
-		else{
+		else
+		{
 			return false;
-		}		
+		}
+		return true;		
 	}
 		
-	public boolean location(String date, double transitionLatitude, double transitionLongitude, double stoplatitude, double stopLongitude, int driverId)
+	public boolean location(String date, double transitionLatitude, double transitionLongitude, double stoplatitude, double stopLongitude, String driverId)
 	{
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
