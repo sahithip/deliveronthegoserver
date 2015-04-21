@@ -33,7 +33,7 @@ public class DbConnection {
 			.append("emailId", emailId)
 			.append("password", password)
 			.append("phoneNumber", phoneNumber)
-			.append("userType", "C");
+			.append("userType", "User");
 			
 			
 			customerSignUpInfo.insert(customerSignUpInfoObj);
@@ -56,7 +56,7 @@ public class DbConnection {
 		.append("driverLicense", driverLicense)
 		.append("emailId", emailId)
 		.append("password",password).append("phoneNumber", phoneNumber)
-		.append("userType", "D");
+		.append("userType", "Driver");
 		driverSignUpInfo.insert(driverSignUpInfoObj);
 		return true;
 		}
@@ -84,7 +84,7 @@ public class DbConnection {
 
 		return true;
 	}
-	public boolean login(String emailId,String password){
+	public boolean login(String emailId,String password,String userType){
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
@@ -102,8 +102,9 @@ public class DbConnection {
 				if(userDetailObj!=null)
 				{
 					String logInPassword = userDetailObj.get("password").toString();
+					String loginUserType = userDetailObj.get("usertype").toString();
 					System.out.println(logInPassword);
-					if((logInPassword!=null)&&(logInPassword.equalsIgnoreCase(password)))
+					if((logInPassword!=null)&&(logInPassword.equalsIgnoreCase(password)) && (loginUserType !=null)&&(loginUserType.equalsIgnoreCase(userType)))
 					{
 						return true;
 					}

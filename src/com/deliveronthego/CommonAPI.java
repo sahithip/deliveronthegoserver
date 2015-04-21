@@ -33,9 +33,11 @@ public class CommonAPI {
 		JSONObject logInInfoJsonObj = new JSONObject(logInInfo);
 		String emailId = logInInfoJsonObj.getString("emailId");
 		String password = logInInfoJsonObj.getString("password");
+		String userType = logInInfoJsonObj.getString("userType");
+
 		System.out.println("emailId: "+emailId);
 		System.out.println("password: "+password);
-		boolean var =  new DbConnection().login(emailId,password);
+		boolean var =  new DbConnection().login(emailId,password,userType);
 		
 		JSONObject statusMessage = new JSONObject();
 		
@@ -43,6 +45,8 @@ public class CommonAPI {
 		{
 			message = "Log In success!!";
     		statusMessage.put("message", message);
+    		statusMessage.put("emailid", emailId);
+    		statusMessage.put("userType", userType);
             return Response.status(200).entity(statusMessage).build();
 		}
 		else
@@ -115,27 +119,37 @@ public class CommonAPI {
 	  }
 	
 	@POST
-	@Path("/deliver")
+	@Path("/findDrivers")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response doDeliveryDetails(String deliver) {
+		System.out.println("inside delivery details");
+
 		String message;
+		GraphTraversal g=new GraphTraversal();
 		try {
+			System.out.println("inside delivery details");
 			JSONObject deliverJson = new JSONObject(deliver);			
         	boolean var =new DbConnection().deliver(deliverJson.getString("emailId"),
-        			deliverJson.getDouble("pickupLatitude"),deliverJson.getDouble("pickupLongitude"),
-        			deliverJson.getDouble("dropOffLatitude"),deliverJson.getDouble("dropOffLongitude"),
+        			Double.valueOf(deliverJson.getString("pickupLatitude")),Double.valueOf(deliverJson.getString("pickupLongitude")),
+        			Double.valueOf(deliverJson.getString("dropOffLatitude")),Double.valueOf(deliverJson.getString("dropOffLongitude")),
         			deliverJson.getInt("length"),deliverJson.getInt("breadth"),deliverJson.getInt("width"));
-        	
+			System.out.println("after delivery details");
+
         	if(var)
         	{
+        		System.out.println("in success");
         		message = "Delivery Details Inserted successfully";
         		JSONObject statusMessage = new JSONObject();
         		statusMessage.put("message", message);
+        		String res = g.findDriver(deliverJson.getString("emailId"),deliverJson.getDouble("pickupLatitude"),deliverJson.getDouble("pickupLongitude"),deliverJson.getDouble("dropOffLatitude"),deliverJson.getDouble("dropOffLongitude"));
+        		System.out.println(res);
                 return Response.status(200).entity(statusMessage).build();
         	}
         	else
         	{
+        		System.out.println("in fail");
+
         		message = "Delivery Details Insertion Failed";
         		JSONObject statusMessage = new JSONObject();
         		statusMessage.put("message", message);
@@ -191,6 +205,33 @@ public class CommonAPI {
 		}
 		
 	}
+	
+	//@POST
+   // @Path("/findDriver")
+	//@Consumes(MediaType.APPLICATION_JSON)
+	public String findDriver(String userDetails) throws JSONException {
+		String driver;
+		GraphTraversal g=new GraphTraversal();
+		try{
+		JSONObject json = new JSONObject(userDetails);
+		
+		//driver= g.findDriver(json.getString("emailid"));
+		System.out.println("user id==="+json.getString("emailid"));
+		driver= g.findDriver(json.getString("emailid"),json.getDouble("pickupLatitude"),json.getDouble("pickupLongitude"),json.getDouble("dropOffLatitude"),json.getDouble("dropOffLongitude"));
+		JSONObject response=new JSONObject(driver);
+		System.out.println("response value=="+response.toString());
+      //	boolean var =new DbConnection().deliver(json.getString("emailid"),json.getString("pickup"),json.getString("dropOff"),json.getString("dimensions"));
+		if(driver != null)
+		    return driver;//Response.status(200).entity(response.toString()).build();			
+		else
+		    return "fail";//Response.status(404).entity("fail").build();
+		}
+		catch(JSONException e)
+		{
+			e.printStackTrace();
+		}
+		return "fail";//Response.status(404).entity("fail").build();
+	  }
 
 	
 }
