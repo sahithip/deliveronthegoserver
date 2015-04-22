@@ -7,7 +7,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.WriteResult;
 
 public class DbConnection {
 	MongoClientURI mongoclienturi;
@@ -20,7 +19,7 @@ public class DbConnection {
 		 return mongoclient;
 	}
 	
-	public boolean customerSignup(String firstName, String lastName, String emailId, String password, int phoneNumber)
+	public String customerSignup(String firstName, String lastName, String emailId, String password, int phoneNumber)
 	{
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
@@ -28,42 +27,58 @@ public class DbConnection {
 		DBCollection customerSignUpInfo = database.getCollection("login");
 		if(emailId.contains("@")&&(password.length()<=8)&&(String.valueOf(phoneNumber).length()==10))
 		{
-			BasicDBObject customerSignUpInfoObj = new BasicDBObject("firstName",firstName)
-			.append("lastName", lastName)
-			.append("emailId", emailId)
-			.append("password", password)
-			.append("phoneNumber", phoneNumber)
-			.append("userType", "User");
+			BasicDBObject customerSignUpInfoObj = new BasicDBObject("emailId", emailId)
+			.append("password", password);
 			
-			
-			customerSignUpInfo.insert(customerSignUpInfoObj);
-			return true;
+			DBCursor customerSignUpInfoCur = customerSignUpInfo.find(customerSignUpInfoObj);
+			if(customerSignUpInfoCur.hasNext())
+			{
+				return "Customer Sign Up Info Already Exists";
+			}
+			else
+			{
+				customerSignUpInfoObj.append("firstName",firstName)
+				.append("lastName", lastName)
+				.append("phoneNumber", phoneNumber)
+				.append("userType", "C");
+				customerSignUpInfo.insert(customerSignUpInfoObj);
+				return "Customer Signup Info inserted successfully";
+			}
 		}
 		else
 		{
-			return false;
+			return "Customer SignUp Info failed to insert";
 		}
 	}
 	
-	public boolean driverSignup(String firstName, String lastName, String driverLicense, String emailId, String password, int phoneNumber){
+	public String driverSignup(String firstName, String lastName, String driverLicense, String emailId, String password, int phoneNumber){
 		mongoclient = getConnection();
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection driverSignUpInfo =  db.getCollection("login");
-		if(emailId.contains("@")&&(password.length()<=8)&& String.valueOf(phoneNumber).length()==10)
+		if(emailId.contains("@")&&(password.length()<=8)&& (String.valueOf(phoneNumber).length()==10)&&!driverLicense.isEmpty())
 		{
-		BasicDBObject driverSignUpInfoObj = new BasicDBObject("firstName",firstName)
-		.append("lastName", lastName)
-		.append("driverLicense", driverLicense)
+		BasicDBObject driverSignUpInfoObj = new BasicDBObject("driverLicense", driverLicense)
 		.append("emailId", emailId)
-		.append("password",password).append("phoneNumber", phoneNumber)
-		.append("userType", "Driver");
-		driverSignUpInfo.insert(driverSignUpInfoObj);
-		return true;
+		.append("password",password);
+			
+		DBCursor driverSignUpInfoCur = driverSignUpInfo.find(driverSignUpInfoObj);
+		if(driverSignUpInfoCur.hasNext())
+		{
+			return "Driver Sign Up Info Already Exists";
 		}
-		//DBCursor userObj = login.find(logObj);
 		else
 		{
-			return false;
+			driverSignUpInfoObj.append("firstName",firstName)
+			.append("lastName", lastName)
+			.append("phoneNumber", phoneNumber)
+			.append("userType", "D");
+		    driverSignUpInfo.insert(driverSignUpInfoObj);
+		    return "Driver Sign Up Info Inserted Successfully";
+		}
+		}
+		else
+		{
+			return "Driver SignUp Info failed to insert";
 		}
 	}
 	public boolean deliver(String emailId, Double pickupLatitude,Double pickupLongitude, Double dropOffLatitude,Double dropOffLongitude,
@@ -102,7 +117,7 @@ public class DbConnection {
 				if(userDetailObj!=null)
 				{
 					String logInPassword = userDetailObj.get("password").toString();
-					String loginUserType = userDetailObj.get("usertype").toString();
+					String loginUserType = userDetailObj.get("userType").toString();
 					System.out.println(logInPassword);
 					if((logInPassword!=null)&&(logInPassword.equalsIgnoreCase(password)) && (loginUserType !=null)&&(loginUserType.equalsIgnoreCase(userType)))
 					{
@@ -119,16 +134,15 @@ public class DbConnection {
 				}
 				
 			}
-			
+			return true;		
 		}
 		else
 		{
 			return false;
-		}
-		return true;		
+		}	
 	}
 		
-	public boolean location(String date, double transitionLatitude, double transitionLongitude, double stoplatitude, double stopLongitude, String driverId)
+	public String location(String date, double transitionLatitude, double transitionLongitude, double stopLatitude, double stopLongitude, String driverId)
 	{
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
@@ -156,7 +170,7 @@ public class DbConnection {
 				System.out.println("previousStopLongitude: " + previousStopLongitude);
 				/*if((previousStopLatitude==0.0) && (previousStopLongitude==0.0))
 				{
-					location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("stopLatitude", stoplatitude).append("stopLongitude", stopLongitude)));
+					location.update(new BasicDBObject("driverID", driverId), new BasicDBObject("$set", new BasicDBObject("stopLatitude", stopLatitude).append("stopLongitude", stopLongitude)));
 				}*/
 			}
 			updateFlag = true;
@@ -166,11 +180,14 @@ public class DbConnection {
 		{
 			BasicDBObject locationObj = new BasicDBObject ("Date", date.toString())
 			.append("transitionLatitude", transitionLatitude).append("transitionLongitude", transitionLongitude)
-			.append("stopLatitude", stoplatitude).append("stopLongitude", stopLongitude)
+			.append("stopLatitude", stopLatitude).append("stopLongitude", stopLongitude)
 			.append("driverID", driverId);		
 			location.insert(locationObj);
+			return "Location Details Inserted Sucessfully";
 		}
-		
-		return true;
+		else
+		{
+			return "Location Details Updated";
+		}
 	}	
 }
