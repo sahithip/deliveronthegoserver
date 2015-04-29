@@ -53,7 +53,7 @@ public class CommonAPI {
 		{
 			message = "Log In Failed!!!";
     		statusMessage.put("message", message);
-            return Response.status(200).entity(statusMessage).build();
+            return Response.status(400).entity(statusMessage).build();
 		}		
 	}
 	
@@ -81,7 +81,7 @@ public class CommonAPI {
 		{
 			message = "Customer Sign up Information Insertion failed!";
     		statusMessage.put("message", message);
-            return Response.status(200).entity(statusMessage).build();
+            return Response.status(400).entity(statusMessage).build();
 		}		
 	}
 	
