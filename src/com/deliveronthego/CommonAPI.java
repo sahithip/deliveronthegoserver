@@ -80,10 +80,7 @@ public class CommonAPI {
 		}
 		else 			
 		{
-<<<<<<< HEAD
-			
-=======
->>>>>>> 2bff7d6d4f0f47f2477bafcad74a0a5f8ba5bef1
+
 			if(responseMessage.equalsIgnoreCase("Customer SignUp Info failed to insert"))
 			{
 				message = "Customer Sign up Information Insertion failed!";

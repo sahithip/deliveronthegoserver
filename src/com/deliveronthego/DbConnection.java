@@ -194,11 +194,8 @@ public class DbConnection {
 		{
 			return "Location Details Updated";
 		}
-<<<<<<< HEAD
+
 	}	
-=======
-	}
-	
 	public String transcationNotification(String driverID, Boolean pickedUp, Boolean delivered)
 	{
 		mongoclient = getConnection();
@@ -246,5 +243,5 @@ public class DbConnection {
 			}
 		}
 	}
->>>>>>> 2bff7d6d4f0f47f2477bafcad74a0a5f8ba5bef1
+
 }
