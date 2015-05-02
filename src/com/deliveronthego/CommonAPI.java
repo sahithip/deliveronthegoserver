@@ -67,21 +67,35 @@ public class CommonAPI {
 		String message;
 		JSONObject statusMessage = new JSONObject();
 		JSONObject customerSignupInfoJsonObj = new JSONObject (customerSignUpInfo);
-		boolean var = new DbConnection().customerSignup(customerSignupInfoJsonObj.getString("firstName"), customerSignupInfoJsonObj.getString("lastName"),
+		String responseMessage = new DbConnection().customerSignup(customerSignupInfoJsonObj.getString("firstName"), customerSignupInfoJsonObj.getString("lastName"),
 				customerSignupInfoJsonObj.getString("emailId"),
 				customerSignupInfoJsonObj.getString("password"), customerSignupInfoJsonObj.getInt("phoneNumber"));
 		
-		if(var)
+		if(responseMessage.equalsIgnoreCase("Customer Sign Up Info Already Exists"))
 		{
-			message = "Customer Sign up Information inserted in the database successfully";
+			message = "Customer Info Already Exists";
     		statusMessage.put("message", message);
-            return Response.status(200).entity(statusMessage).build();
+    		statusMessage.put("status", "402");
+            return Response.status(402).entity(statusMessage).build();
 		}
-		else
+		else 			
 		{
-			message = "Customer Sign up Information Insertion failed!";
-    		statusMessage.put("message", message);
-            return Response.status(400).entity(statusMessage).build();
+			
+			if(responseMessage.equalsIgnoreCase("Customer SignUp Info failed to insert"))
+			{
+				message = "Customer Sign up Information Insertion failed!";
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "404");
+	            return Response.status(404).entity(statusMessage).build();
+			}
+			else
+			{
+				message = "Customer Sign up Information Inserted successfully!";
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "200");
+	            return Response.status(200).entity(statusMessage).build();
+				
+			}
 		}		
 	}
 	
@@ -89,33 +103,41 @@ public class CommonAPI {
 	@Path("/driversignup")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response driverSignup(String driverSignUpInfo) {
+	public Response driverSignup(String driverSignUpInfo) throws JSONException 
+	{
 		
 		String message;
-		try {
-			
-			JSONObject statusMessage = new JSONObject();
-			JSONObject driverSignUpInfoJsonObj = new JSONObject(driverSignUpInfo);
-        	boolean var =new DbConnection().driverSignup(driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("driverLicense")
-        			,driverSignUpInfoJsonObj.getString("emailId"),driverSignUpInfoJsonObj.getString("password"),driverSignUpInfoJsonObj.getInt("phoneNumber"));
-        	if(var)
-        	{
-        		message = "Driver Sign up Information inserted in the database successfully";
-        		statusMessage.put("message", message);
-                return Response.status(200).entity(statusMessage).build();
-        	}
-        	else
-        	{
-        		message = "Driver Sign up Information insertion failed";
-        		statusMessage.put("message", message);
-                return Response.status(404).entity(statusMessage).build();
-        	}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			message = "Driver Sign up Information insertion failed";
-	        return Response.status(404).entity(message).build();
+		JSONObject statusMessage = new JSONObject();
+		JSONObject driverSignUpInfoJsonObj = new JSONObject(driverSignUpInfo);
+    	String responseMessage =new DbConnection().driverSignup(driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("driverLicense")
+    			,driverSignUpInfoJsonObj.getString("emailId"),driverSignUpInfoJsonObj.getString("password"),driverSignUpInfoJsonObj.getInt("phoneNumber"));
+    	
+    	if(responseMessage.equalsIgnoreCase("Driver Sign Up Info Already Exists"))
+		{
+			message = "Driver Info Already Exists";
+    		statusMessage.put("message", message);
+    		statusMessage.put("status", "402");
+            return Response.status(402).entity(statusMessage).build();
 		}
+		else 			
+		{
+			if(responseMessage.equalsIgnoreCase("Driver SignUp Info failed to insert"))
+			{
+				message = "Driver Sign up Information Insertion failed!";
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "404");
+	            return Response.status(404).entity(statusMessage).build();
+			}
+			else
+			{
+				message = "Driver Sign up Information Inserted successfully!";
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "200");
+	            return Response.status(200).entity(statusMessage).build();
+				
+			}
+		}		
+
 	  }
 	
 	@POST
@@ -168,40 +190,46 @@ public class CommonAPI {
 	@Path("/location")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getSingUp(String location)
+	public Response getSingUp(String location) throws JSONException
 	{
 		String message;
-		try{
-			JSONObject locationJsonObj = new JSONObject(location);			
-			Date date = new Date();
-			Calendar cal = Calendar.getInstance();
-		    cal.setTime(date);
-		    int year = cal.get(Calendar.YEAR);
-		    int month = cal.get(Calendar.MONTH)+ 1;
-		    int day = cal.get(Calendar.DAY_OF_MONTH);
-		    String dateStr = month + "/" + day + "/" + year;
-		    System.out.println(dateStr);
-		    JSONObject statusMessage = new JSONObject();	   
-			boolean var = new DbConnection().location(dateStr,locationJsonObj.getDouble("transitionLatitude"),locationJsonObj.getDouble("transitionLongitude"),
-					locationJsonObj.getDouble("stopLatitude"),locationJsonObj.getDouble("stopLongitude"),locationJsonObj.getString("driverID"));
-			if(var)
+		JSONObject locationJsonObj = new JSONObject(location);			
+		Date date = new Date();
+		Calendar cal = Calendar.getInstance();
+	    cal.setTime(date);
+	    int year = cal.get(Calendar.YEAR);
+	    int month = cal.get(Calendar.MONTH)+ 1;
+	    int day = cal.get(Calendar.DAY_OF_MONTH);
+	    String dateStr = month + "/" + day + "/" + year;
+	    System.out.println(dateStr);
+	    JSONObject statusMessage = new JSONObject();	   
+		String responseMessage = new DbConnection().location(dateStr,locationJsonObj.getDouble("transitionLatitude"),locationJsonObj.getDouble("transitionLongitude"),
+				locationJsonObj.getDouble("stopLatitude"),locationJsonObj.getDouble("stopLongitude"),locationJsonObj.getString("driverID"));
+		
+		if(responseMessage.equalsIgnoreCase("Location Details Inserted Sucessfully"))
+		{
+			message = "Location Details Inserted successfully";       		
+    		statusMessage.put("message", message);
+    		statusMessage.put("status", "200");
+			return Response.status(200).entity(statusMessage).build();
+		}
+		else
+		{
+			if(responseMessage.equalsIgnoreCase("Location Details Updated"))
 			{
-				message = "Location Details Inserted successfully";       		
-        		statusMessage.put("message", message);
-				return Response.status(200).entity(statusMessage).build();
+				message = "Location Details Updated Successfully";
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "201");
+				return Response.status(201).entity(statusMessage).build();
+				
 			}
 			else
 			{
 				message = "Location Details Insertion Failed";
-        		statusMessage.put("message", message);
+	    		statusMessage.put("message", message);
+	    		statusMessage.put("status", "404");
 				return Response.status(404).entity(statusMessage).build();
 			}
-		}
-		catch(JSONException e)
-		{
-			e.printStackTrace();
-			message = "Location Details Insertion Failed";
-			return Response.status(404).entity(message).build();
 		}
 		
 	}
