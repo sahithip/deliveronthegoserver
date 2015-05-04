@@ -104,7 +104,7 @@ public class CommonAPI {
 		}
 		else 			
 		{
-			
+
 			if(responseMessage.equalsIgnoreCase("Customer SignUp Info failed to insert"))
 			{
 				message = "Customer Sign up Information Insertion failed!";
@@ -351,5 +351,41 @@ public static Content createContent(String id,String name){
 		return "fail";//Response.status(404).entity("fail").build();
 	  }
 
+	@POST
+	@Path("/transaction")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateTransaction(String transactionDetails) throws JSONException
+	{
+		JSONObject transactionDetailsObj = new JSONObject(transactionDetails);
+		String driverID = transactionDetailsObj.getString("driverID");
+		Boolean pickedUp = transactionDetailsObj.getBoolean("pickedUp");
+		Boolean delivered = transactionDetailsObj.getBoolean("delivered");
+		
+		JSONObject statusMessage = new JSONObject();
+		String responseMessage = new DbConnection().transcationNotification(driverID, pickedUp, delivered);
+		
+		if(responseMessage.equalsIgnoreCase("New Transaction Data inserted"))
+		{
+			statusMessage.put("Status Message", "Transaction Details Inserted Succesfully");
+			statusMessage.put("Status-Code", "200");
+			return Response.status(200).entity(statusMessage).build();
+		}
+		else
+		{
+			if(responseMessage.equalsIgnoreCase("Transaction Completed"))
+			{
+				statusMessage.put("Status Message", "Transaction Details Updated Succesfully");
+				statusMessage.put("Status-Code", "201");
+				return Response.status(201).entity(statusMessage).build();
+			}
+			else
+			{
+				statusMessage.put("Status Message", "Transaction Failed");
+				statusMessage.put("Status-Code", "404");
+				return Response.status(404).entity(statusMessage).build();
+			}
+		}
+	}
 	
 }

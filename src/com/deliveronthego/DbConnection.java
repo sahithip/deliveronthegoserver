@@ -1,5 +1,10 @@
 package com.deliveronthego;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -187,5 +192,54 @@ public class DbConnection {
 		{
 			return "Location Details Updated";
 		}
+
 	}	
+	public String transcationNotification(String driverID, Boolean pickedUp, Boolean delivered)
+	{
+		mongoclient = getConnection();
+		@SuppressWarnings("deprecation")
+		DB db = mongoclient.getDB("deliveronthego");
+		DBCollection notification = db.getCollection("notification");
+		
+		BasicDBObject notificationObj = new BasicDBObject();
+		notificationObj.append("driverID", driverID);
+		Date date = new Date();
+		Calendar cal = Calendar.getInstance();
+	    cal.setTime(date);
+		
+		DBCursor notificationCursor = notification.find(notificationObj);
+		
+		if(pickedUp && !delivered)
+		{	
+			notificationObj.append("pickedUp", pickedUp.toString())
+			.append("delivered", delivered.toString())
+			.append("date", cal.toString());
+			notification.insert(notificationObj);
+			
+			return "New Transaction Data inserted";
+		}
+		else
+		{
+			if(notificationCursor.hasNext()) 
+			{
+				notificationCursor.next();
+				DBObject notifyObj = notificationCursor.curr();
+				Date currentDateInDatabase = (Date) notifyObj.get("date");
+				if(!(boolean) notifyObj.get("delivered") && currentDateInDatabase.before(date))
+				{
+					notification.update(new BasicDBObject("driverID", driverID), new BasicDBObject("$set", new BasicDBObject("delivered", delivered.toString())));
+					return "Transaction Completed";
+				}
+				else
+				{
+					return "Transaction failed to update";
+				}
+			}
+			else
+			{
+				return "Transaction failed";
+			}
+		}
+	}
+
 }
