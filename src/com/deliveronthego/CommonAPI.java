@@ -1,5 +1,7 @@
 package com.deliveronthego;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -11,11 +13,33 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.bson.types.ObjectId;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import com.deliveronthego.model.Content;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+
 @Path("/home")
 public class CommonAPI {
+	
+	MongoClientURI mongoclienturi;
+	MongoClient mongoclient;
+
+	
+	public MongoClient getConnection(){
+		 mongoclienturi = new MongoClientURI("mongodb://deliveronthego:deliveronthego@ds037097.mongolab.com:37097/deliveronthego");
+		 mongoclient = new MongoClient(mongoclienturi);
+		 return mongoclient;
+	}
+	
 	@GET
 	@Path("/test")
 	  @Produces(MediaType.TEXT_PLAIN)
@@ -69,7 +93,7 @@ public class CommonAPI {
 		JSONObject customerSignupInfoJsonObj = new JSONObject (customerSignUpInfo);
 		String responseMessage = new DbConnection().customerSignup(customerSignupInfoJsonObj.getString("firstName"), customerSignupInfoJsonObj.getString("lastName"),
 				customerSignupInfoJsonObj.getString("emailId"),
-				customerSignupInfoJsonObj.getString("password"), customerSignupInfoJsonObj.getInt("phoneNumber"));
+				customerSignupInfoJsonObj.getString("password"), customerSignupInfoJsonObj.getInt("phoneNumber"),customerSignupInfoJsonObj.getString("regId"));
 		
 		if(responseMessage.equalsIgnoreCase("Customer Sign Up Info Already Exists"))
 		{
@@ -110,7 +134,7 @@ public class CommonAPI {
 		JSONObject statusMessage = new JSONObject();
 		JSONObject driverSignUpInfoJsonObj = new JSONObject(driverSignUpInfo);
     	String responseMessage =new DbConnection().driverSignup(driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("firstName"),driverSignUpInfoJsonObj.getString("driverLicense")
-    			,driverSignUpInfoJsonObj.getString("emailId"),driverSignUpInfoJsonObj.getString("password"),driverSignUpInfoJsonObj.getInt("phoneNumber"));
+    			,driverSignUpInfoJsonObj.getString("emailId"),driverSignUpInfoJsonObj.getString("password"),driverSignUpInfoJsonObj.getInt("phoneNumber"),driverSignUpInfoJsonObj.getString("regId"));
     	
     	if(responseMessage.equalsIgnoreCase("Driver Sign Up Info Already Exists"))
 		{
@@ -166,6 +190,39 @@ public class CommonAPI {
         		statusMessage.put("message", message);
         		String res = g.findDriver(deliverJson.getString("emailId"),deliverJson.getDouble("pickupLatitude"),deliverJson.getDouble("pickupLongitude"),deliverJson.getDouble("dropOffLatitude"),deliverJson.getDouble("dropOffLongitude"));
         		System.out.println(res);
+        		JSONArray jarr = new JSONArray(res);
+        		for(int j=0;j<jarr.length();j++){
+        			JSONObject json = new JSONObject(jarr.get(j).toString());
+        			String driverId = json.get("driverId").toString();
+        			System.out.println(driverId);
+        			mongoclient=getConnection();
+        			DB db=mongoclient.getDB("deliveronthego");
+        			DBCollection driverSourceDetails=db.getCollection("login");
+        			BasicDBObject whereQuery = new BasicDBObject();
+        			whereQuery.put("emailId", driverId);
+        			whereQuery.put("userType", "Driver");
+        			DBCursor cursor = driverSourceDetails.find(whereQuery);
+        			if(cursor.hasNext()) {
+        				BasicDBObject obj=(BasicDBObject)cursor.next();
+        				String regId = obj.getString("regId");
+        				String[] gcmIds = regId.split("\\=");
+        				System.out.println(gcmIds[1]);
+        				 String apiKey = "AIzaSyDzXEIMFY3EGbJ4mjc9xBYyeakjggxuTC0";
+        			        Content content = createContent(gcmIds[1],deliverJson.getString("emailId"));
+
+        			        DotgGCMPost.post(apiKey, content);
+        				DBCollection selection = db.getCollection("selection");
+        				BasicDBObject sel = new BasicDBObject().append("userEmailId", deliverJson.getString("emailId"))
+        						.append("driverEmailId", driverId).append("Accepted", "No");
+        				selection.insert(sel);
+        				
+                		throw new JSONException("gi");
+
+        			}else{
+        			//System.out.println("cursor=="+cursor.toString());
+        		throw new JSONException("No email found");
+        			}
+        		}
                 return Response.status(200).entity(statusMessage).build();
         	}
         	else
@@ -185,7 +242,15 @@ public class CommonAPI {
 		message = "Delivery Details Insertion Failed";
         return Response.status(404).entity(message).build();
 	  }
-	
+public static Content createContent(String id,String name){
+
+    Content c = new Content();
+
+    c.addRegId(id);
+    c.createData("Deliver on the Go", "Driver Pickup Request"+"="+name);
+
+    return c;
+}
 	@POST
 	@Path("/location")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -194,13 +259,15 @@ public class CommonAPI {
 	{
 		String message;
 		JSONObject locationJsonObj = new JSONObject(location);			
-		Date date = new Date();
+		Date date=new Date();
+		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+		String dateStr =df.format(date);
 		Calendar cal = Calendar.getInstance();
 	    cal.setTime(date);
-	    int year = cal.get(Calendar.YEAR);
-	    int month = cal.get(Calendar.MONTH)+ 1;
-	    int day = cal.get(Calendar.DAY_OF_MONTH);
-	    String dateStr = month + "/" + day + "/" + year;
+	    //int year = cal.get(Calendar.YEAR);
+	    //int month = cal.get(Calendar.MONTH)+ 1;
+	    //int day = cal.get(Calendar.DAY_OF_MONTH);
+	   // String dateStr = month + "/" + day + "/" + year;
 	    System.out.println(dateStr);
 	    JSONObject statusMessage = new JSONObject();	   
 		String responseMessage = new DbConnection().location(dateStr,locationJsonObj.getDouble("transitionLatitude"),locationJsonObj.getDouble("transitionLongitude"),
@@ -232,6 +299,29 @@ public class CommonAPI {
 			}
 		}
 		
+	}
+	
+	@POST
+	@Path("/acceptRequest")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response acceptRequest(String accept){
+	    JSONObject statusMessage = new JSONObject();	   
+
+		try {
+			JSONObject json = new JSONObject(accept);
+			json.get("userEmailId");
+			json.get("driverEmailId");
+			String message = "Location Details Insertion Accepted";
+    		statusMessage.put("message", message);
+    		statusMessage.put("status", "200");
+			return Response.status(200).entity(statusMessage).build();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return Response.status(404).entity("error").build();
+		}
+
 	}
 	
 	//@POST

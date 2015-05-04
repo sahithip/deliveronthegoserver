@@ -67,14 +67,16 @@ public class GraphTraversal {
 		{
 			HashMap temp=new HashMap<String,Double>();
 			BasicDBObject obj=(BasicDBObject)cursor.next();
-			System.out.println("df.format(date))==="+df.format(date));
 			dateChk=(String)obj.get("Date");
+			System.out.println("df.format(date))==="+df.format(date)+" vv "+dateChk);
+
 			if(dateChk.equals(df.format(date)))
 			{
 				srcLat=(Double) obj.get("transitionLatitude");
 				srcLon=(Double)obj.get("transitionLongitude");
 	
 				driverId=(String)obj.get("driverID");
+				
 				
 				temp.put("latitude",srcLat);
 				temp.put("longitude",srcLon);
@@ -384,9 +386,22 @@ public class GraphTraversal {
 		      System.out.print(me.getKey() + ": ");
 		      System.out.println(me.getValue());
 		    }
-		
+		JSONArray jsonarr = new JSONArray();
+		Set keys = sortedBestDriverMap.keySet();
+		for(Object k:keys){
+			JSONObject json =new JSONObject();
+			try {
+				json.put("driverId", (String)k);
+				jsonarr.put(json);
+
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 		System.out.println("Best Driver after sorting=="+sortedBestDriverMap.toString());
-		return sortedBestDriverMap.toString();
+		return jsonarr.toString();
 	 }
 	 
 	 public static <K, V extends Comparable<V>> Map<K, V> 

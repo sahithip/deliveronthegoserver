@@ -19,7 +19,7 @@ public class DbConnection {
 		 return mongoclient;
 	}
 	
-	public String customerSignup(String firstName, String lastName, String emailId, String password, int phoneNumber)
+	public String customerSignup(String firstName, String lastName, String emailId, String password, int phoneNumber,String regId)
 	{
 		mongoclient = getConnection();
 		@SuppressWarnings("deprecation")
@@ -40,7 +40,7 @@ public class DbConnection {
 				customerSignUpInfoObj.append("firstName",firstName)
 				.append("lastName", lastName)
 				.append("phoneNumber", phoneNumber)
-				.append("userType", "C");
+				.append("userType", "User").append("regId", regId);
 				customerSignUpInfo.insert(customerSignUpInfoObj);
 				return "Customer Signup Info inserted successfully";
 			}
@@ -51,7 +51,7 @@ public class DbConnection {
 		}
 	}
 	
-	public String driverSignup(String firstName, String lastName, String driverLicense, String emailId, String password, int phoneNumber){
+	public String driverSignup(String firstName, String lastName, String driverLicense, String emailId, String password, int phoneNumber,String regId){
 		mongoclient = getConnection();
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection driverSignUpInfo =  db.getCollection("login");
@@ -71,7 +71,7 @@ public class DbConnection {
 			driverSignUpInfoObj.append("firstName",firstName)
 			.append("lastName", lastName)
 			.append("phoneNumber", phoneNumber)
-			.append("userType", "D");
+			.append("userType", "Driver").append("regId", regId);
 		    driverSignUpInfo.insert(driverSignUpInfoObj);
 		    return "Driver Sign Up Info Inserted Successfully";
 		}
@@ -148,8 +148,6 @@ public class DbConnection {
 		@SuppressWarnings("deprecation")
 		DB db = mongoclient.getDB("deliveronthego");
 		DBCollection location = db.getCollection("location");
-		System.out.println(date);
-		System.out.println(driverId);
 		BasicDBObject whereQuery = new BasicDBObject();
 		whereQuery.put("driverID", driverId);
 		DBCursor locationCursor = location.find(whereQuery);
